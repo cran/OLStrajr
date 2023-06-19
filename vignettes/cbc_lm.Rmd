@@ -1,0 +1,69 @@
+---
+title: "cbc_lm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cbc_lm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(OLStrajr)
+```
+
+
+## Introduction
+
+The OLStrajr package provides the cbc_lm function for obtaining estimates for each case. This vignette will demonstrate its use through an example that utilizes the Robins dataset. This dataset presents the yearly male-to-female ratio for Robins, as documented in  [Birds: incomplete counts—five-minute bird counts Version 1.0](https://www.doc.govt.nz/documents/science-and-technical/inventory-monitoring/im-toolbox-birds-incomplete-five-min-counts.pdf).
+
+```{r}
+data(robins)
+```
+
+
+### Preparing Data
+
+While the OLStraj R function works with wide-form data to maintain compatibility with the original OLStraj SAS macro, the cbc_lm function aligns with common R statistical modeling practices by utilizing long-form data. In this example, we employ the tidyr package to transform the Robins dataset into a long format.
+
+Moreover, we adjust the resulting Year variable into a numeric format with a range from 0 to 4 through the following steps: conversion to a factor, coercion to numeric, and subtraction of 1.
+
+```{r}
+# Convert to long form
+library(tidyr)
+
+robinsL <- robins |> pivot_longer(cols = starts_with("aug"),
+                                  names_to = "Year",
+                                  values_to = "Ratio")
+
+robinsL$Year = as.numeric(as.factor(robinsL$Year)) - 1
+```
+
+
+### Running the case by case regression
+
+```{r}
+robins_mod <- cbc_lm(robinsL, Ratio ~ Year, .case = "site")
+
+# Show class
+class(robins_mod)
+```
+
+
+The cbc_lm class includes print, summary, and plot methods. In the following section, we'll take a closer look at the summary method.
+
+### Model Summary
+
+According to [Carrig, Wirth, and Curran (2004)](https://www.tandfonline.com/doi/abs/10.1207/S15328007SEM1101_9), the mean values of the case-by-case OLS intercepts and slopes can act as unbiased estimators of the mean population intercept and slope. In the implementation of case-by-case regression by [Rogosa & Saner (1995)](https://journals.sagepub.com/doi/10.3102/10769986020002149), it is noted that the standard errors are the standard deviations across 4,000 bootstrap replications, and the 90% confidence intervals' endpoints correspond to 5% and 95% values of the empirical distributions obtained from the resampling. They further suggested that more sophisticated and accurate confidence intervals can be developed using the methods in [Efron and Tibshirani (1993)](https://www.taylorfrancis.com/books/mono/10.1201/9780429246593/introduction-bootstrap-bradley-efron-tibshirani)."
+
+By default, the summary method for the cbc_lm class initially displays the mean coefficients, bootstrap standard errors (over 4,000 replications), and bootstrap 95% confidence intervals. In addition, it exhibits the broom::tidy and broom::glance results for each case.
+
+```{r}
+summary(robins_mod)
+```

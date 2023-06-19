@@ -1,0 +1,94 @@
+---
+title: "quadratic_trajectory"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{quadratic_trajectory}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(OLStrajr)
+```
+
+
+## Introduction
+
+The OLStrajr package in R, designed as an adaptation of the OLStraj SAS macro reported in [Carrig, Wirth, and Curran (2004)](https://www.tandfonline.com/doi/abs/10.1207/S15328007SEM1101_9), facilitates the generation of individual level plots. These plots can depict linear, quadratic, or both ordinary least squares (OLS) estimated trajectories, superimposed on the original data.
+
+In the following demonstration, we use the rats dataset (for details, see ?OLStrajr::rats), which originates from [Rogosa & Saner (1995)](https://journals.sagepub.com/doi/10.3102/10769986020002149). We will explore how the 'regtype' parameter of OLStraj can be used to study linear, quadratic, or both OLS-estimated trajectories.
+
+### Displaying the rats Dataset
+
+```{r}
+data(rats)
+print(rats)
+```
+
+
+### Plotting Linear Trajectories
+
+```{r}
+# Run OLS traj
+rats_lin <- OLStraj(data = rats,
+                      idvarname = "Rat",
+                      predvarname = "Week",
+                      outvarname = "Weight",
+                      varlist = c("t0", "t1", "t2", "t3", "t4"),
+                      timepts = c(0, 1, 2, 3, 4),
+                      regtype = "lin",
+                      int_bins = 3,
+                      lin_bins = 3)
+
+# Show linear trajectories 
+rats_lin$individual_plots
+```
+
+
+Note: The cbc_lm vignette transforms the robbins data from wide to long format to run case-by-case regression. However, for models with a single independent variable, you can also obtain the cbc_lm output directly from the OLStraj results.
+
+```{r}
+print(rats_lin$models)
+```
+
+
+### Plotting Quadratic Trajectories
+
+```{r}
+OLStraj(data = rats,
+        idvarname = "Rat",
+        predvarname = "Week",
+        outvarname = "Weight",
+        varlist = c("t0", "t1", "t2", "t3", "t4"),
+        timepts = c(0, 1, 2, 3, 4),
+        regtype = "quad",
+        int_bins = 3,
+        lin_bins = 3)$individual_plots
+```
+
+
+### Plotting Linear & Quadratic Trajectories
+
+In the resulting plots, the quadratic trajectory is depicted by a dashed line while the linear trajectory is represented by a solid line.
+
+```{r}
+OLStraj(data = rats,
+        idvarname = "Rat",
+        predvarname = "Week",
+        outvarname = "Weight",
+        varlist = c("t0", "t1", "t2", "t3", "t4"),
+        timepts = c(0, 1, 2, 3, 4),
+        regtype = "both",
+        int_bins = 3,
+        lin_bins = 3)$individual_plots
+```
+
+
+The power of OLStrajr lies in its ability to quickly visualize the different approximations of the OLS trajectories. The package aids in the understanding of complex trends in the data and provides a solid base for further statistical analysis and interpretation.
